@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bake Sale Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .total {
+            font-weight: bold;
+            font-size: 1.2em;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #fff;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .total span {
+            margin-left: 10px;
+        }
+        input[type="number"] {
+            width: 60px;
+        }
+        .category {
+            margin-top: 30px;
+        }
+        .category h2 {
+            background-color: #e2e2e2;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="total">
+        <span>Grand Total (TL):</span>
+        <span id="grandTotal">0</span>
+    </div>
+
+    <h1>Bake Sale Calculator</h1>
+
+    <div class="category">
+        <h2>Individual Items</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Price (TL)</th>
+                    <th>Quantity</th>
+                    <th>Subtotal (TL)</th>
+                </tr>
+            </thead>
+            <tbody id="individualItems"></tbody>
+        </table>
+    </div>
+
+    <div class="category">
+        <h2>Bundle Deals</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Bundle/Item</th>
+                    <th>Price (TL)</th>
+                    <th>Quantity</th>
+                    <th>Subtotal (TL)</th>
+                </tr>
+            </thead>
+            <tbody id="bundleDeals"></tbody>
+        </table>
+    </div>
+
+    <div class="category">
+        <h2>Hot Chocolate and Toppings</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Price (TL)</th>
+                    <th>Quantity</th>
+                    <th>Subtotal (TL)</th>
+                </tr>
+            </thead>
+            <tbody id="hotChocolate"></tbody>
+        </table>
+    </div>
+
+    <div class="category">
+        <h2>Baked Goods</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Price (TL)</th>
+                    <th>Quantity</th>
+                    <th>Subtotal (TL)</th>
+                </tr>
+            </thead>
+            <tbody id="bakedGoods"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const categories = {
+            individualItems: [
+                { name: "Indomie", price: 100 },
+                { name: "Doritos", price: 60 },
+                { name: "Takis", price: 350 },
+                { name: "Lays Fundan", price: 80 },
+                { name: "Sour Patch", price: 80 },
+                { name: "Ülker Çikolata", price: 30 },
+                { name: "Kitkat", price: 50 },
+                { name: "Powerade", price: 70 },
+                { name: "Oreos (4pc packet)", price: 30 },
+                { name: "Haribo Gummies (1 packet has 3 small packets)", price: 50 }
+            ],
+            bundleDeals: [
+                { name: "Snack Duo Deal (Lay/Doritos + Oreos)", price: 150 },
+                { name: "Snack Duo Deal (Takis + Sour Patch)", price: 390 },
+                { name: "Choco-Lovers Pack (Kitkat + Ülker Çikolata + Haribo Gummies/Oreo)", price: 120 },
+                { name: "On-The-Go Combo (Indomie Noodles + Powerade + Doritos/Lays/Haribo/Chocolate)", price: 250 },
+                { name: "Ultimate Party Bundle (Takis + Chips + Haribo/Chocolate + Powerade)", price: 500 },
+                { name: "Sweet Treat Trio (Haribo Gummies + Kitkat/Ülker Wafer)", price: 100 }
+            ],
+            hotChocolate: [
+                { name: "Winter Bliss Bundle - Petite", price: 170 },
+                { name: "Winter Bliss Bundle - Grand", price: 200 },
+                { name: "Hot Chocolate (Small)", price: 65 },
+                { name: "Hot Chocolate (Medium)", price: 80 },
+                { name: "Topping (Marshmallow 1pc)", price: 15 },
+                { name: "Topping (Marshmallow 2pc)", price: 20 },
+                { name: "Topping (Chocolate Syrup + Marshmallow 2pc)", price: 30 }
+            ],
+            bakedGoods: [
+                { name: "Cinnamon Rolls (Mini)", price: 50 },
+                { name: "Salted Caramel Cookies", price: 60 },
+                { name: "Salted Caramel Blondies", price: 70 },
+                { name: "Eclairs", price: 70 },
+                { name: "Red Velvet Cake", price: 50 }
+            ]
+        };
+
+        const grandTotalElement = document.getElementById("grandTotal");
+
+        function updateGrandTotal() {
+            let grandTotal = 0;
+            const rows = document.querySelectorAll("tbody tr");
+
+            rows.forEach(row => {
+                const quantityInput = row.querySelector("input");
+                const subtotalElement = row.querySelector(".subtotal");
+
+                const quantity = parseInt(quantityInput.value) || 0;
+                const price = parseFloat(quantityInput.dataset.price);
+                const subtotal = quantity * price;
+
+                subtotalElement.textContent = subtotal.toFixed(2);
+                grandTotal += subtotal;
+            });
+
+            grandTotalElement.textContent = grandTotal.toFixed(2);
+        }
+
+        function populateCategory(categoryId, items) {
+            const tableBody = document.getElementById(categoryId);
+
+            items.forEach(item => {
+                const row = document.createElement("tr");
+
+                const nameCell = document.createElement("td");
+                nameCell.textContent = item.name;
+
+                const priceCell = document.createElement("td");
+                priceCell.textContent = item.price.toFixed(2);
+
+                const quantityCell = document.createElement("td");
+                const quantityInput = document.createElement("input");
+                quantityInput.type = "number";
+                quantityInput.min = 0;
+                quantityInput.value = 0;
+                quantityInput.dataset.price = item.price;
+                quantityInput.addEventListener("input", updateGrandTotal);
+                quantityCell.appendChild(quantityInput);
+
+                const subtotalCell = document.createElement("td");
+                subtotalCell.className = "subtotal";
+                subtotalCell.textContent = "0.00";
+
+                row.appendChild(nameCell);
+                row.appendChild(priceCell);
+                row.appendChild(quantityCell);
+                row.appendChild(subtotalCell);
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        Object.keys(categories).forEach(categoryId => {
+            populateCategory(categoryId, categories[categoryId]);
+        });
+    </script>
+</body>
+</html>
